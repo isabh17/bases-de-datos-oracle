@@ -1,0 +1,36 @@
+username: system
+password: Ora1234
+
+CREATE USER C##SILVERISA17 IDENTIFIED BY NALA;
+GRANT CREATE TABLE TO C##SILVERISA17;
+
+
+CARGAAAA
+
+1. DELETE FROM temporaryTable 
+2. RECORRER LA CARPETA
+3. CADA UNO DE LOS ARCHIVOS LEIDOS CARGAR EN LA TABLA temporaryTable
+4. recorrer la tabla tabla tablaTemporal 
+
+detalle
+orden de venta
+vendedores
+cliente
+producto
+pais
+categoria
+
+SELECT COUNT(*) FROM CATEGORIAS WHERE 
+
+-- Eliminar restricciones de clave foránea
+ALTER TABLE detalle DROP CONSTRAINT detalle_orden_de_venta_fk;
+-- Asegúrate de eliminar todas las restricciones de clave foránea que hagan referencia a la columna id_orden en otras tablas.
+
+-- Eliminar la restricción de clave primaria en orden_de_venta
+ALTER TABLE orden_de_venta DROP CONSTRAINT orden_de_venta_pk;
+
+ELIMINAR CONTENIDO DE UNA TABLA
+DELETE FROM nombre_de_tabla;
+
+REVISAR SI MI TABLA ESTA VACIA
+SELECT COUNT(*) AS cantidad_de_registros FROM orden_de_venta;
