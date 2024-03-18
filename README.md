@@ -18,11 +18,5 @@ Explicación de cómo consumir la API para obtener los resultados de las consult
 ## 6. Tecnologías Utilizadas
 Lista de las tecnologías utilizadas (motor de base de datos, lenguaje de programación para la API, herramienta de Data Modeler, etc.). Justificación de la elección de cada tecnología.
 
-## 7. Manual Técnico
-Detalles sobre la estructura de la base de datos, incluyendo relaciones, llaves, entidades, etc. Pasos detallados sobre la creación de la base de datos, la carga del modelo y las consultas creadas. Código fuente de la API desarrollada, explicando cada parte relevante. Instrucciones para ejecutar y probar la API, utilizando herramientas como Postman.
-
 ## 8. Restricciones y Entregables
 Enumeración de las restricciones del proyecto. Descripción de los entregables requeridos y cómo deben ser presentados.
-
-## Ejemplo de Manual Técnico
-Puedes estructurar tu manual técnico siguiendo esta plantilla, adaptándola según los detalles específicos de tu proyecto. Asegúrate de proporcionar instrucciones claras y detalladas para cada paso, y de incluir ejemplos y capturas de pantalla cuando sea necesario.
