@@ -1,4 +1,4 @@
-# Manual Técnico - Proyecto #1
+# Proyecto #1
 
 ## 1. Introducción
 Breve descripción del proyecto y sus objetivos. Explicación del contexto y la problemática a resolver.
