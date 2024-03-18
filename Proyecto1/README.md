@@ -50,6 +50,18 @@ En este manual técnico se describe el proceso para el desarrollo del Proyecto #
 6. **Consumo de la API:**
    - Realizar peticiones HTTP a los endpoints de la API para visualizar los reportes y realizar acciones como eliminar tablas, crear tablas, etc.
 
+## Esquema de la Base de Datos
+
+El esquema de la base de datos incluye las siguientes tablas:
+
+- `categoria`: Contiene información sobre las categorías de los productos.
+- `cliente`: Almacena los datos de los clientes, como nombre, dirección y teléfono.
+- `detalle`: Guarda los detalles de las ventas, como la cantidad de productos vendidos.
+- `orden_de_venta`: Contiene información sobre las órdenes de venta, como la fecha y el cliente.
+- `pais`: Almacena los países.
+- `producto`: Contiene información sobre los productos, como nombre y precio.
+- `vendedor`: Guarda los datos de los vendedores, como nombre y país.
+
 ## Tablas
 
 ### categoria
@@ -111,6 +123,20 @@ En este manual técnico se describe el proceso para el desarrollo del Proyecto #
 Este manual proporciona una descripción detallada de la estructura de la base de datos, lo que facilita la comprensión y el mantenimiento del sistema.
 
 # Consultas
+### Consultas SQL
+
+Se deben desarrollar consultas SQL para generar los siguientes reportes:
+
+1. Cliente que ha realizado la mayor cantidad de compras, mostrando su ID, nombre, apellido, país, monto total gastado y número de compras.
+2. Producto más y menos comprado, incluyendo su ID, nombre, categoría, cantidad total comprada y monto total.
+3. Vendedor que ha vendido productos por el monto total más alto, mostrando su ID, nombre y monto total vendido.
+4. País que ha vendido la mayor y menor cantidad de productos en términos de monto total, mostrando el nombre del país y el monto total vendido.
+5. Los cinco países que han realizado las mayores compras en orden ascendente, mostrando el ID del país, nombre y monto total comprado.
+6. Mostrar la categoría que más y menos se ha comprado. Debe de mostrar el nombre de la categoría y cantidad de unidades. (Una sola consulta).
+7. Mostrar la categoría más comprada por cada país. Se debe de mostrar el nombre del país, nombre de la categoría y cantidad de unidades.
+8. Mostrar las ventas por mes de Inglaterra. Debe de mostrar el número del mes y el monto.
+9. Mostrar el mes con más y menos ventas. Se debe de mostrar el número de mes y monto. (Una sola consulta).
+10. Mostrar las ventas de cada producto de la categoría deportes. Se debe de mostrar el id del producto, nombre y monto
 
 1. **consulta_1**: Obtiene la información del cliente que ha realizado la mayor cantidad de compras, mostrando su ID, nombre, apellido, país, monto total gastado y número de compras.
 2. **consulta_2**: Muestra el producto más y menos comprado, incluyendo su ID, nombre, categoría, cantidad total comprada y monto total.
