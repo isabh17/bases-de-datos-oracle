@@ -109,3 +109,16 @@ En este manual técnico se describe el proceso para el desarrollo del Proyecto #
 - Se han definido varias restricciones de clave primaria (`PRIMARY KEY`) y restricciones de clave externa (`FOREIGN KEY`) para mantener la integridad de los datos y establecer relaciones entre las tablas.
 
 Este manual proporciona una descripción detallada de la estructura de la base de datos, lo que facilita la comprensión y el mantenimiento del sistema.
+
+# Consultas
+
+1. **consulta_1**: Obtiene la información del cliente que ha realizado la mayor cantidad de compras, mostrando su ID, nombre, apellido, país, monto total gastado y número de compras.
+2. **consulta_2**: Muestra el producto más y menos comprado, incluyendo su ID, nombre, categoría, cantidad total comprada y monto total.
+3. **consulta_3**: Retorna al vendedor que ha vendido productos por el monto total más alto, mostrando su ID, nombre y monto total vendido.
+4. **consulta_4**: Muestra el país que ha vendido la mayor y menor cantidad de productos en términos de monto total, mostrando el nombre del país y el monto total vendido.
+5. **consulta_5**: Obtiene los cinco países que han realizado las mayores compras en orden ascendente, mostrando el ID del país, nombre y monto total comprado.
+6. **consulta_6**: Muestra la categoría de producto más y menos comprada, incluyendo el nombre de la categoría y la cantidad total comprada.
+7. **consulta_7**: Retorna el país que más ha comprado por categoría, mostrando el nombre del país, la categoría y la cantidad total comprada.
+8. **consulta_8**: Obtiene el monto total de ventas por mes para un país específico (id_pais=10).
+9. **consulta_9**: Muestra el mes con mayor y menor cantidad total vendida, mostrando el número del mes y el monto total vendido.
+10. **consulta_10**: Muestra los productos de una categoría específica (id_categoria=15) con el monto total vendido, mostrando el ID del producto, nombre del producto y monto total.
