@@ -1,0 +1,48 @@
+--- Realizar Consultas del saldo del cliente
+EXECUTE consultarSaldoCliente(3030206080); 
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas del id del cliente
+EXECUTE consultarCliente(1001);
+EXECUTE consultarCliente(1002);
+EXECUTE consultarCliente(1003);
+EXECUTE consultarCliente(1004);
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas del los movs del cliente
+EXECUTE consultarMovsCliente(1001);
+EXECUTE consultarMovsCliente(1002);
+EXECUTE consultarMovsCliente(1003);
+EXECUTE consultarMovsCliente(1004);
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas del los tipos de cuentas
+EXECUTE consultarTipoCuentas(1);
+EXECUTE consultarTipoCuentas(2);
+EXECUTE consultarTipoCuentas(3);
+EXECUTE consultarTipoCuentas(4);
+EXECUTE consultarTipoCuentas(5);
+EXECUTE consultarTipoCuentas(6);
+EXECUTE consultarTipoCuentas(7);
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas del los movs generales de las cuentas
+EXECUTE consultarMovsGenFech('01/01/2024', '01/12/2024');
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas del los movs generales de los clientes
+EXECUTE consultarMovsFechClien(1001,'01/01/2024', '01/12/2024');
+EXECUTE consultarMovsFechClien(1002,'01/04/2024', '01/04/2024');
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas servicios/productos
+EXECUTE consultarDesasignacion;
+SET SERVEROUTPUT ON;
+
+--- Realizar Consultas trigger
+DELETE from historial;
+EXECUTE audit_trigger;
+SET SERVEROUTPUT ON;
+
+--- COSAS QUE ME FALTAN
+--- ENCRIPTAR CONTRASEÑA

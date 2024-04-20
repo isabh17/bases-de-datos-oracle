@@ -1,0 +1,416 @@
+--- Consultar Saldo Cliente
+CREATE OR REPLACE PROCEDURE consultarSaldoCliente (
+    p_numero_cuenta IN INTEGER
+)
+AS
+    v_nombre_cliente cliente.nombre%TYPE;
+    v_tipo_cliente tipo_cliente.nombre%TYPE;
+    v_tipo_cuenta tipo_cuenta.nombre%TYPE;
+    v_saldo_cuenta cuenta_bancaria.saldo_cuenta%TYPE;
+    v_saldo_apertura cuenta_bancaria.monto_apertura%TYPE;
+BEGIN
+    -- Buscar los datos asociados al número de cuenta proporcionado
+    SELECT c.nombre, tc.nombre, t.nombre, cb.saldo_cuenta, cb.monto_apertura
+    INTO v_nombre_cliente, v_tipo_cliente, v_tipo_cuenta, v_saldo_cuenta, v_saldo_apertura
+    FROM cuenta_bancaria cb
+    INNER JOIN cliente c ON cb.cliente_id_cliente = c.id_cliente
+    INNER JOIN tipo_cliente tc ON c.tipo_cliente_id_tipo = tc.id_tipo
+    INNER JOIN tipo_cuenta t ON cb.tipo_cuenta_id_tipo_cuenta = t.id_tipo_cuenta
+    WHERE cb.id_cuenta = p_numero_cuenta;
+
+    -- Mostrar los datos encontrados
+    DBMS_OUTPUT.PUT_LINE('Consultar Saldo Cliente');
+    DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+    DBMS_OUTPUT.PUT_LINE('-Nombre Cliente: ' || v_nombre_cliente);
+    DBMS_OUTPUT.PUT_LINE('-Tipo de Cliente: ' || v_tipo_cliente);
+    DBMS_OUTPUT.PUT_LINE('-Tipo de Cuenta: ' || v_tipo_cuenta);
+    DBMS_OUTPUT.PUT_LINE('-Saldo de Cuenta: ' || v_saldo_cuenta);
+    DBMS_OUTPUT.PUT_LINE('-Saldo de Apertura: ' || v_saldo_apertura);
+    DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Manejar la excepción si no se encuentra la cuenta
+        DBMS_OUTPUT.PUT_LINE('-La cuenta proporcionada no existe.');
+END consultarSaldoCliente;
+/
+SET SERVEROUTPUT ON;
+
+--- Consultar cliente
+CREATE OR REPLACE PROCEDURE consultarCliente (
+    p_idCliente IN INTEGER
+)
+AS
+    v_nombre_completo VARCHAR2(400);
+    v_fecha_creacion DATE;
+    v_usuario VARCHAR2(200);
+    v_telefonos VARCHAR2(4000) := '';
+    v_correos VARCHAR2(4000) := '';
+    v_num_cuentas INTEGER := 0;
+    v_id_cliente INTEGER := 0;
+    v_tipos_cuenta VARCHAR2(4000) := '';
+BEGIN
+    SELECT c.id_cliente, c.nombre || ' ' || c.apellidos, c.fecha_c, c.usuario,
+           (SELECT LISTAGG(t.telefono, ', ') WITHIN GROUP (ORDER BY t.telefono)
+            FROM telefono t WHERE t.cliente_id_cliente = c.id_cliente),
+           (SELECT LISTAGG(cor.correo, ', ') WITHIN GROUP (ORDER BY cor.correo)
+            FROM correo cor WHERE cor.cliente_id_cliente = c.id_cliente),
+           COUNT(cb.id_cuenta),
+           (SELECT LISTAGG(tc.nombre, ', ') WITHIN GROUP (ORDER BY tc.nombre)
+            FROM cuenta_bancaria cb
+            JOIN tipo_cuenta tc ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+            WHERE cb.cliente_id_cliente = c.id_cliente)
+    INTO v_id_cliente, v_nombre_completo, v_fecha_creacion, v_usuario,
+         v_telefonos, v_correos, v_num_cuentas, v_tipos_cuenta
+    FROM cliente c
+    LEFT JOIN cuenta_bancaria cb ON c.id_cliente = cb.cliente_id_cliente
+    LEFT JOIN tipo_cuenta tc ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+    WHERE c.id_cliente = p_idCliente
+    GROUP BY c.id_cliente, c.nombre, c.apellidos, c.fecha_c, c.usuario;
+
+    -- Mostrar los resultados
+    DBMS_OUTPUT.PUT_LINE('Consultar cliente');
+    DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+    DBMS_OUTPUT.PUT_LINE('-Id cliente: ' || v_id_cliente);
+    DBMS_OUTPUT.PUT_LINE('-Nombre completo: ' || v_nombre_completo);
+    DBMS_OUTPUT.PUT_LINE('-Fecha de creación: ' || TO_CHAR(v_fecha_creacion, 'DD-MM-YYYY'));
+    DBMS_OUTPUT.PUT_LINE('-Usuario: ' || v_usuario);
+    DBMS_OUTPUT.PUT_LINE('-Teléfono(s): ' || v_telefonos);
+    DBMS_OUTPUT.PUT_LINE('-Correo(s): ' || v_correos);
+    DBMS_OUTPUT.PUT_LINE('-No. de cuentas que posee: ' || v_num_cuentas);
+    DBMS_OUTPUT.PUT_LINE('-Tipo(s) de cuenta que posee: ' || v_tipos_cuenta);
+    DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Manejar la excepción si no se encuentra el cliente
+        DBMS_OUTPUT.PUT_LINE('-El cliente con ID ' || p_idCliente || ' no existe.');
+END consultarCliente;
+/
+SET SERVEROUTPUT ON;
+
+--- Consultar movimientos cliente
+CREATE OR REPLACE PROCEDURE consultarMovsCliente (
+    idCliente IN INTEGER
+) AS
+    cliente_existente NUMBER;
+    movimientos_cliente NUMBER;
+BEGIN
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO cliente_existente FROM cliente WHERE id_cliente = idCliente;
+    
+    -- Si el cliente no existe, mostrar un mensaje de error
+    IF cliente_existente = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Error: El cliente con ID ' || idCliente || ' no existe.');
+    ELSE
+        -- Verificar si el cliente tiene movimientos
+        SELECT COUNT(*) INTO movimientos_cliente
+        FROM transaccion t
+        JOIN cuenta_bancaria cb ON t.cuenta_bancaria_id_cuenta = cb.id_cuenta
+        WHERE cb.cliente_id_cliente = idCliente;
+
+        -- Si el cliente no tiene movimientos, mostrar un mensaje
+        IF movimientos_cliente = 0 THEN
+            DBMS_OUTPUT.PUT_LINE('El cliente con ID ' || idCliente || ' no ha realizado ninguna transacción.');
+        ELSE
+            -- Si el cliente tiene movimientos, continuar con la consulta de movimientos
+            FOR movs IN (
+                SELECT 
+                    t.id_trans AS id_transaccion,
+                    tt.nombre AS tipo_transaccion,
+                    CASE
+                        WHEN d.id_deb IS NOT NULL THEN tt.descripcion
+                        WHEN c.id_compra IS NOT NULL THEN (SELECT des_produc from producto_servicio where id_produc = c.producto_servicio_id_produc)
+                        WHEN dep.id_dep IS NOT NULL THEN tt.descripcion
+                    END AS tipo_servicio,
+                    CASE
+                        WHEN d.id_deb IS NOT NULL THEN d.monto
+                        WHEN c.id_compra IS NOT NULL THEN c.importe_compra
+                        WHEN dep.id_dep IS NOT NULL THEN dep.monto
+                    END AS monto,
+                    cb.id_cuenta AS no_cuenta,
+                    tc.nombre AS tipo_cuenta
+                FROM 
+                    transaccion t
+                LEFT JOIN 
+                    debito d ON t.debito_id_deb = d.id_deb
+                LEFT JOIN 
+                    compra c ON t.compra_id_compra = c.id_compra
+                LEFT JOIN 
+                    deposito dep ON t.deposito_id_dep = dep.id_dep
+                JOIN 
+                    tip_trans tt ON t.tip_trans_id_tipo_trans = tt.id_tipo_trans
+                JOIN 
+                    cuenta_bancaria cb ON t.cuenta_bancaria_id_cuenta = cb.id_cuenta
+                JOIN 
+                    tipo_cuenta tc ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+                WHERE 
+                    cb.cliente_id_cliente = idCliente
+            ) LOOP
+                DBMS_OUTPUT.PUT_LINE('Consultar movimientos cliente');
+                DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+                DBMS_OUTPUT.PUT_LINE('-Id transacción: ' || movs.id_transaccion);
+                DBMS_OUTPUT.PUT_LINE('-Tipo transacción: ' || movs.tipo_transaccion);
+                DBMS_OUTPUT.PUT_LINE('-Monto: ' || movs.monto);
+                DBMS_OUTPUT.PUT_LINE('-Tipo de servicio: ' || movs.tipo_servicio);
+                DBMS_OUTPUT.PUT_LINE('-No. cuenta: ' || movs.no_cuenta);
+                DBMS_OUTPUT.PUT_LINE('-Tipo cuenta: ' || movs.tipo_cuenta);
+                DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+            END LOOP;
+        END IF;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END consultarMovsCliente;
+/
+SET SERVEROUTPUT ON;
+
+--- Consultar clientes por tipo de cuenta
+CREATE OR REPLACE PROCEDURE consultarTipoCuentas (
+    idTipoCuenta IN INTEGER
+) AS
+    tipo_cuenta_existente NUMBER;
+BEGIN
+    -- Verificar si el tipo de cuenta existe
+    SELECT COUNT(*) INTO tipo_cuenta_existente FROM tipo_cuenta WHERE id_tipo_cuenta = idTipoCuenta;
+    
+    -- Si el tipo de cuenta no existe, mostrar un mensaje de error
+    IF tipo_cuenta_existente = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Error: El tipo de cuenta con ID ' || idTipoCuenta || ' no existe.');
+    ELSE
+        -- Si el tipo de cuenta existe, continuar con la consulta de clientes
+        FOR clientes_tipo_cuenta IN (
+            SELECT 
+                tc.id_tipo_cuenta AS codigo_tipo_cuenta,
+                tc.nombre AS nombre_cuenta,
+                COUNT(cb.cliente_id_cliente) AS cantidad_clientes
+            FROM 
+                tipo_cuenta tc
+            LEFT JOIN 
+                cuenta_bancaria cb ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+            WHERE 
+                tc.id_tipo_cuenta = idTipoCuenta
+            GROUP BY 
+                tc.id_tipo_cuenta, tc.nombre
+        ) LOOP
+            DBMS_OUTPUT.PUT_LINE('Consultar clientes por tipo de cuenta');
+            DBMS_OUTPUT.PUT_LINE('----------------------------------------------------------------------------------------');
+            DBMS_OUTPUT.PUT_LINE('-Código de tipo de cuenta: ' || clientes_tipo_cuenta.codigo_tipo_cuenta);
+            DBMS_OUTPUT.PUT_LINE('-Nombre cuenta: ' || clientes_tipo_cuenta.nombre_cuenta);
+            DBMS_OUTPUT.PUT_LINE('-Cantidad de clientes que poseen este tipo de cuenta: ' || clientes_tipo_cuenta.cantidad_clientes);
+            DBMS_OUTPUT.PUT_LINE('----------------------------------------------------------------------------------------');
+        END LOOP;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END consultarTipoCuentas;
+/
+SET SERVEROUTPUT ON;
+
+--- Consultar movimientos generales por rango de fechas
+CREATE OR REPLACE PROCEDURE consultarMovsGenFech (
+    fechaInicioStr IN VARCHAR2,
+    fechaFinStr IN VARCHAR2
+) AS
+    fechaInicio DATE;
+    fechaFin DATE;
+    movimientos_encontrados NUMBER := 0;
+BEGIN
+    -- Convertir las cadenas de fecha a tipo DATE
+    fechaInicio := TO_DATE(fechaInicioStr, 'DD/MM/YYYY');
+    fechaFin := TO_DATE(fechaFinStr, 'DD/MM/YYYY');
+
+    -- Validar formato de fecha
+    IF fechaInicio IS NULL THEN
+        DBMS_OUTPUT.PUT_LINE('Error: La fecha de inicio tiene un formato incorrecto.');
+        RETURN;
+    END IF;
+    
+    IF fechaFin IS NULL THEN
+        DBMS_OUTPUT.PUT_LINE('Error: La fecha de fin tiene un formato incorrecto.');
+        RETURN;
+    END IF;
+
+    -- Consulta de movimientos generales por rango de fechas
+    FOR movs IN (
+        SELECT 
+            t.id_trans AS id_transaccion,
+            tt.nombre AS tipo_transaccion,
+            CASE
+                WHEN d.id_deb IS NOT NULL THEN tt.descripcion
+                WHEN c.id_compra IS NOT NULL THEN (SELECT des_produc from producto_servicio where id_produc = c.producto_servicio_id_produc)
+                WHEN dep.id_dep IS NOT NULL THEN tt.descripcion
+            END AS tipo_servicio,
+            cl.nombre || ' ' || cl.apellidos AS nombre_cliente,
+            cb.id_cuenta AS no_cuenta,
+            tc.nombre AS tipo_cuenta,
+            t.fecha,
+            CASE
+                WHEN d.id_deb IS NOT NULL THEN d.monto
+                WHEN c.id_compra IS NOT NULL THEN c.importe_compra
+                WHEN dep.id_dep IS NOT NULL THEN dep.monto
+            END AS monto,
+            t.otros_detalles
+        FROM 
+            transaccion t
+        LEFT JOIN 
+            debito d ON t.debito_id_deb = d.id_deb
+        LEFT JOIN 
+            compra c ON t.compra_id_compra = c.id_compra
+        LEFT JOIN 
+            deposito dep ON t.deposito_id_dep = dep.id_dep
+        JOIN 
+            tip_trans tt ON t.tip_trans_id_tipo_trans = tt.id_tipo_trans
+        JOIN 
+            cuenta_bancaria cb ON t.cuenta_bancaria_id_cuenta = cb.id_cuenta
+        JOIN 
+            cliente cl ON cb.cliente_id_cliente = cl.id_cliente
+        JOIN 
+            tipo_cuenta tc ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+        WHERE 
+            t.fecha BETWEEN fechaInicio AND fechaFin
+    ) LOOP
+        movimientos_encontrados := movimientos_encontrados + 1;
+        DBMS_OUTPUT.PUT_LINE('Consultar movimientos generales por rango de fechas');
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+        DBMS_OUTPUT.PUT_LINE('- Id transacción: ' || movs.id_transaccion);
+        DBMS_OUTPUT.PUT_LINE('- Tipo transacción: ' || movs.tipo_transaccion);
+        DBMS_OUTPUT.PUT_LINE('- Tipo de servicio: ' || movs.tipo_servicio);
+        DBMS_OUTPUT.PUT_LINE('- Nombre Cliente: ' || movs.nombre_cliente);
+        DBMS_OUTPUT.PUT_LINE('- No. cuenta: ' || movs.no_cuenta);
+        DBMS_OUTPUT.PUT_LINE('- Tipo de cuenta: ' || movs.tipo_cuenta);
+        DBMS_OUTPUT.PUT_LINE('- Fecha: ' || TO_CHAR(movs.fecha, 'DD/MM/YYYY HH24:MI:SS'));
+        DBMS_OUTPUT.PUT_LINE('- Monto: ' || movs.monto);
+        DBMS_OUTPUT.PUT_LINE('- Otros detalles: ' || movs.otros_detalles);
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+    END LOOP;
+
+    -- Mostrar mensaje si no se encontraron movimientos
+    IF movimientos_encontrados = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('No se encontraron movimientos en el rango de fechas especificado.');
+    END IF;
+END consultarMovsGenFech;
+/
+SET SERVEROUTPUT ON;
+
+--- Consulta de Movimientos por Rango de Fechas para un Cliente Específico
+CREATE OR REPLACE PROCEDURE consultarMovsFechClien (
+    idCliente IN cliente.id_cliente%TYPE,
+    fechaInicioStr IN VARCHAR2,
+    fechaFinStr IN VARCHAR2
+) AS
+    fechaInicio DATE;
+    fechaFin DATE;
+    movimientos_encontrados NUMBER := 0;
+BEGIN
+    -- Convertir las cadenas de fecha a tipo DATE
+    fechaInicio := TO_DATE(fechaInicioStr, 'DD/MM/YYYY');
+    fechaFin := TO_DATE(fechaFinStr, 'DD/MM/YYYY');
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO movimientos_encontrados FROM cliente WHERE id_cliente = idCliente;
+
+    -- Si el cliente no existe, mostrar un mensaje de error
+    IF movimientos_encontrados = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Error: El cliente con ID ' || idCliente || ' no existe.');
+        RETURN;
+    END IF;
+    movimientos_encontrados := 0;
+
+    -- Consulta de movimientos del cliente por rango de fechas
+    FOR movs IN (
+        SELECT 
+            t.id_trans AS id_transaccion,
+            tt.nombre AS tipo_transaccion,
+            CASE
+                WHEN d.id_deb IS NOT NULL THEN tt.descripcion
+                WHEN c.id_compra IS NOT NULL THEN (SELECT des_produc from producto_servicio where id_produc = c.producto_servicio_id_produc)
+                WHEN dep.id_dep IS NOT NULL THEN tt.descripcion
+            END AS tipo_servicio,
+            cl.nombre || ' ' || cl.apellidos AS nombre_cliente,
+            cb.id_cuenta AS no_cuenta,
+            tc.nombre AS tipo_cuenta,
+            t.fecha,
+            CASE
+                WHEN d.id_deb IS NOT NULL THEN d.monto
+                WHEN c.id_compra IS NOT NULL THEN c.importe_compra
+                WHEN dep.id_dep IS NOT NULL THEN dep.monto
+            END AS monto,
+            t.otros_detalles
+        FROM 
+            transaccion t
+        LEFT JOIN 
+            debito d ON t.debito_id_deb = d.id_deb
+        LEFT JOIN 
+            compra c ON t.compra_id_compra = c.id_compra
+        LEFT JOIN 
+            deposito dep ON t.deposito_id_dep = dep.id_dep
+        JOIN 
+            tip_trans tt ON t.tip_trans_id_tipo_trans = tt.id_tipo_trans
+        JOIN 
+            cuenta_bancaria cb ON t.cuenta_bancaria_id_cuenta = cb.id_cuenta
+        JOIN 
+            cliente cl ON cb.cliente_id_cliente = cl.id_cliente
+        JOIN 
+            tipo_cuenta tc ON cb.tipo_cuenta_id_tipo_cuenta = tc.id_tipo_cuenta
+        WHERE 
+            cl.id_cliente = idCliente
+            AND t.fecha BETWEEN fechaInicio AND fechaFin
+    ) LOOP
+        movimientos_encontrados := movimientos_encontrados + 1;
+        DBMS_OUTPUT.PUT_LINE('Consulta de Movimientos por Rango de Fechas para un Cliente Específico');
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+        DBMS_OUTPUT.PUT_LINE('- Id transacción: ' || movs.id_transaccion);
+        DBMS_OUTPUT.PUT_LINE('- Tipo transacción: ' || movs.tipo_transaccion);
+        DBMS_OUTPUT.PUT_LINE('- Tipo de servicio: ' || movs.tipo_servicio);
+        DBMS_OUTPUT.PUT_LINE('- Nombre Cliente: ' || movs.nombre_cliente);
+        DBMS_OUTPUT.PUT_LINE('- No. cuenta: ' || movs.no_cuenta);
+        DBMS_OUTPUT.PUT_LINE('- Tipo de cuenta: ' || movs.tipo_cuenta);
+        DBMS_OUTPUT.PUT_LINE('- Fecha: ' || TO_CHAR(movs.fecha, 'DD/MM/YYYY HH24:MI:SS'));
+        DBMS_OUTPUT.PUT_LINE('- Monto: ' || movs.monto);
+        DBMS_OUTPUT.PUT_LINE('- Otros detalles: ' || movs.otros_detalles);
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+    END LOOP;
+
+    -- Mostrar mensaje si no se encontraron movimientos
+    IF movimientos_encontrados = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('No se encontraron movimientos para el cliente en el rango de fechas especificado.');
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END consultarMovsFechClien;
+/
+SET SERVEROUTPUT ON;
+
+--- Consultar productos y servicios
+CREATE OR REPLACE PROCEDURE consultarDesasignacion AS
+BEGIN
+    -- Consulta de servicios y productos disponibles
+    FOR servicio_producto IN (
+        SELECT 
+            id_produc AS codigo_servicio_producto,
+            des_produc AS nombre,
+            des_produc AS descripcion, -- Corregido para usar el campo "des_produc" como descripción
+            CASE
+                WHEN tipo = 1 THEN 'Servicio'
+                WHEN tipo = 2 THEN 'Producto'
+            END AS tipo
+        FROM 
+            producto_servicio
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('Consultar productos y servicios');
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+        DBMS_OUTPUT.PUT_LINE('-Código de servicio / producto: ' || servicio_producto.codigo_servicio_producto);
+        DBMS_OUTPUT.PUT_LINE('-Nombre: ' || servicio_producto.nombre);
+        DBMS_OUTPUT.PUT_LINE('-Descripción: ' || servicio_producto.descripcion);
+        DBMS_OUTPUT.PUT_LINE('-Tipo: ' || servicio_producto.tipo);
+        DBMS_OUTPUT.PUT_LINE('--------------------------------------------');
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END consultarDesasignacion;
+/
+SET SERVEROUTPUT ON;
+

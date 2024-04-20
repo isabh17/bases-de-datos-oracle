@@ -1,0 +1,6 @@
+ALTER TABLE transaccion 
+    MODIFY (debito_id_deb INTEGER NULL,
+            compra_id_compra INTEGER NULL,
+            deposito_id_dep INTEGER NULL
+    );
+COMMIT;

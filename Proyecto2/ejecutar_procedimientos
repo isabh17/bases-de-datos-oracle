@@ -1,0 +1,54 @@
+-- Registrar tipo de cliente
+EXECUTE registrarTipoCliente(5, 'Cliente Extraordinario', 'Este cliente no esta definido en el enunciado es un tipo de cliente extra');
+SET SERVEROUTPUT ON;
+
+-- Registrar cliente
+EXECUTE registrarCliente(1001, 'Juan Isaac', 'Perez Lopez', '22888080', 'micorreo@gmail.com', 'jisaacp2024', '12345678', 1);
+EXECUTE registrarCliente(1002, 'Maria Isabel', 'Gonzalez Perez', '22805050-22808080', 'micorreo1@gmail.com|micorreo2@gmail.com', 'mariauser', '12345679', 2);
+EXECUTE registrarCliente(1003, 'Pedro', 'Martínez', '50222667788-50237954469', 'pedro@email.com', 'pedrom', 'password123', 3);
+EXECUTE registrarCliente(1004, 'Eloisa', 'Bonilla', '50242989350', 'silverisa@gmail.com', 'silverisa17', 'nalimpo', 4);
+SET SERVEROUTPUT ON;
+
+-- Registrar tipo cuenta
+EXECUTE registrarTipoCuenta(7,'Cuenta Extraordinaria','Cuenta Extraordinaria a enunciado');
+SET SERVEROUTPUT ON;
+
+-- Registrar cuenta
+EXECUTE registrarCuenta(3030206080, 500.00, 800.00, 'Apertura de cuenta con Q500','','',5,1001);
+EXECUTE registrarCuenta(3030206081, 600.00, 600.00, 'Apertura de cuenta con Q500','01/04/2024 07:00:00','esta apertura tiene fecha',5,1001);
+SET SERVEROUTPUT ON;
+
+-- Productos/Servicios
+EXECUTE crearProductoServicio(18, 1, 50.80, 'Este es un servicio el cual tiene un precio predefinido'); 
+EXECUTE crearProductoServicio(19, 2, 0, 'Este es un producto el cual tiene un precio variable'); 
+SET SERVEROUTPUT ON;
+
+-- realizar compra
+EXECUTE realizarCompra(1111, '10/04/2024', 40, 'compra de servicio', 18, 1001); 
+EXECUTE realizarCompra(1112, '10/04/2024', 0, 'compra de producto', 19, 1001); 
+EXECUTE realizarCompra(1113, '10/04/2024', 50, 'compra de producto', 19, 1001); 
+SET SERVEROUTPUT ON;
+
+-- realizar deposito
+EXECUTE realizarDeposito(1114, '10/04/2024', 100, 'deposito de dinero', 1001);
+EXECUTE realizarDeposito(1115, '10/04/2024', 0, 'deposito de dinero', 1001);
+SET SERVEROUTPUT ON;
+
+-- realizar retiro
+EXECUTE realizarDebito(1116, '10/04/2024', 100, 'retiro de dinero', 1001);
+EXECUTE realizarDebito(1117, '10/04/2024', 0, 'retiro de dinero con error', 1001);
+SET SERVEROUTPUT ON;
+
+-- realizar tipo transcción
+EXECUTE registrarTipoTransaccion(1, 'Compra', 'Transacción de compra');
+EXECUTE registrarTipoTransaccion(2, 'Deposito', 'Transacción de deposito');
+EXECUTE registrarTipoTransaccion(3, 'Debito', 'Transacción de debito');
+SET SERVEROUTPUT ON;
+
+-- realizar transcción
+EXECUTE asignarTransaccion(1118, '10/04/2024','', 1, 1113, 3030206080);
+EXECUTE asignarTransaccion(1115, '10/04/2024','',2, 1114, 3030206080); 
+EXECUTE asignarTransaccion(1120, '10/04/2024','este si tiene detalle',3, 1116, 3030206080); 
+SET SERVEROUTPUT ON;
+
+ 
