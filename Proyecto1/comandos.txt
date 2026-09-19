@@ -1,7 +1,7 @@
 username: system
-password: Ora1234
+password: <tu contraseña de Oracle>
 
-CREATE USER C##SILVERISA17 IDENTIFIED BY NALA;
+CREATE USER C##SILVERISA17 IDENTIFIED BY <tu contraseña>;
 GRANT CREATE TABLE TO C##SILVERISA17;
 
 

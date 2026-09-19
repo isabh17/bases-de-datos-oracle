@@ -6,8 +6,8 @@ from flask import Flask, render_template
 
 # Configuración de la base de datos Oracle
 def conectar_base_de_datos():
-    username = os.environ.get('DB_USERNAME', 'C##SILVERISA17')
-    password = os.environ.get('DB_PASSWORD', 'NALA')
+    username = os.environ['DB_USERNAME']
+    password = os.environ['DB_PASSWORD']
     database_url = os.environ.get('DB_URL', 'localhost:1521/free')
 
     connection = cx_Oracle.connect(username, password, database_url)
